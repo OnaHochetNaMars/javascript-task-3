@@ -132,8 +132,8 @@ function timeForRobbery (gangFreeTime, workingHours) {
         var hour2 = parseInt (date2.substring (0, 2)) - parseInt (date2.substring (5));
         var minutes1 = parseInt (date1.substring (3, 5));
         var minutes2 = parseInt (date2.substring (3, 5));
-        var bankWorkFrom = new Date (2016, 09, day, hour1, minutes1);
-        var bankWorkTo = new Date (2016, 09, day, hour2, minutes2);
+        var bankWorkFrom = new Date (2016, 9, day, hour1, minutes1);
+        var bankWorkTo = new Date (2016, 9, day, hour2, minutes2);
         var a = maxDate (gangFreeTime[i].from, bankWorkFrom);
         var b = minDate (gangFreeTime[i].to, bankWorkTo);
         if (b > a) {
