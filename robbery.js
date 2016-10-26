@@ -21,7 +21,7 @@ function toDate (date) {
     var day = DaysOfWeek[dayOfWeek];
     var hours = parseInt (date.substring(3, 5)) - parseInt (date.substring(8));
     var minutes = parseInt (date.substring(6, 8));
-    return new Date (2016, 09, day, hours, minutes);
+    return new Date (2016, 9, day, hours, minutes);
 }
 
 function newSchedule (schedule) {
@@ -68,7 +68,7 @@ function toFreeSchedule (schedule) {
         freeSchedule[key] = [];
         var n = (schedule[key]).length;
         freeSchedule[key][0] = {
-            from: new Date (2016, 09, 1, 0, 0),
+            from: new Date (2016, 9, 1, 0, 0),
             to: schedule[key][0].from
         }
         for (var i = 1; i < n; i++) {
@@ -79,7 +79,7 @@ function toFreeSchedule (schedule) {
         }
         freeSchedule[key][n] = {
             from: schedule[key][n - 1].to,
-            to: new Date (2016, 09, 3, 23, 59)
+            to: new Date (2016, 9, 3, 23, 59)
         }
         freeSchedule[key].len = n + 1;
     }
@@ -148,20 +148,22 @@ function timeForRobbery (gangFreeTime, workingHours) {
     return res;
 }
 
-function mainFunction (time_to_robbery, duration) {//не знаю как назвать функцию=(
+function mainFunction (time_to_robbery, duration, res) {//не знаю как назвать функцию=(
     var msInDuration = duration*60*1000;
-    var res = [];
+    //var res = [];
     var n = time_to_robbery.length;
     var c = 0;
     for (var i = 0; i < n; i++) {
         var a = (time_to_robbery[i].to - time_to_robbery[i].from);
         if (a >= msInDuration) {
             //console.log(a);
+            res[c] = {};
             res[c] = time_to_robbery[i];
             c++;
         }
     }
     //console.log (res);
+    if (c === 0) {return null;}
     return res; // время для ограбления
 }
 
@@ -186,7 +188,7 @@ exports.getAppropriateMoment = function (schedule, duration, workingHours) {
     //console.info(freeTime);
     var time_for_robbery = timeForRobbery (freeTime, workingHours);
     //console.info(time_for_robbery);
-    var time_to_robbery = mainFunction (time_for_robbery, duration);
+    var time_to_robbery = mainFunction (time_for_robbery, duration, []);
     //console.info(time_to_robbery);
 
     return {
@@ -198,7 +200,8 @@ exports.getAppropriateMoment = function (schedule, duration, workingHours) {
          * @returns {Boolean}
          */
         exists: function () {
-            return (time_to_robbery !== []);
+            //console.log (this.time);
+            return (this.time !== null);
         },
 
         /**
