@@ -62,6 +62,109 @@ function minDate (date1, date2) {
     return date2;
 }
 
+function toFreeSchedule (schedule) {
+    var freeSchedule = {};
+    for (var key in schedule) {
+        freeSchedule[key] = [];
+        var n = (schedule[key]).length;
+        freeSchedule[key][0] = {
+            from: new Date (2016, 09, 1, 0, 0),
+            to: schedule[key][0].from
+        }
+        for (var i = 1; i < n; i++) {
+            freeSchedule[key][i] = {
+                from: schedule[key][i - 1].to,
+                to: schedule[key][i].from
+            }
+        }
+        freeSchedule[key][n] = {
+            from: schedule[key][n - 1].to,
+            to: new Date (2016, 09, 3, 23, 59)
+        }
+        freeSchedule[key].len = n + 1;
+    }
+    
+    return freeSchedule;
+}
+
+function gangFreeTime (schedule) {
+    var freeTime = [];
+    var c = 0;
+    var D = schedule.Danny.len;
+    var R = schedule.Rusty.len;
+    var L = schedule.Linus.len;
+    //console.log (D, R, L);
+    for (var i = 0; i < D; i++) {
+        for (var j = 0; j < R; j++) {
+            for (var k = 0; k < L; k++) {
+                var date1 = schedule.Danny[i];
+                var date2 = schedule.Rusty[j];
+                var date3 = schedule.Linus[k];
+                //console.log (date1);
+                var a = maxFrom (date1, date2, date3);
+                var b = minTo (date1, date2, date3);
+                if (b > a) {
+                    freeTime[c] = {
+                        from: a,
+                        to: b
+                    }
+                    c++;
+                }
+            }
+        }
+    }
+    
+    return freeTime;
+}
+
+function timeForRobbery (gangFreeTime, workingHours) {
+    var n = gangFreeTime.length;
+    var res = [];
+    var c = 0;
+    for (var i = 0; i < n; i++) {
+        //console.log ((gangFreeTime[i].from).getDate());
+        //var day = 1;
+        var day = gangFreeTime[i].from.getDate();
+        if (day > 3) { return res;}
+        var date1 = workingHours.from;
+        var date2 = workingHours.to;
+        var hour1 = parseInt (date1.substring (0, 2)) - parseInt (date1.substring (5));
+        var hour2 = parseInt (date2.substring (0, 2)) - parseInt (date2.substring (5));
+        var minutes1 = parseInt (date1.substring (3, 5));
+        var minutes2 = parseInt (date2.substring (3, 5));
+        var bankWorkFrom = new Date (2016, 09, day, hour1, minutes1);
+        var bankWorkTo = new Date (2016, 09, day, hour2, minutes2);
+        var a = maxDate (gangFreeTime[i].from, bankWorkFrom);
+        var b = minDate (gangFreeTime[i].to, bankWorkTo);
+        if (b > a) {
+            res[c] = {
+                from: a,
+                to: b
+            }
+            c++;
+        }
+    }
+    
+    return res;
+}
+
+function mainFunction (time_to_robbery, duration) {//не знаю как назвать функцию=(
+    var msInDuration = duration*60*1000;
+    var res = [];
+    var n = time_to_robbery.length;
+    var c = 0;
+    for (var i = 0; i < n; i++) {
+        var a = (time_to_robbery[i].to - time_to_robbery[i].from);
+        if (a >= msInDuration) {
+            //console.log(a);
+            res[c] = time_to_robbery[i];
+            c++;
+        }
+    }
+    //console.log (res);
+    return res; // время для ограбления
+}
+
 /**
  * @param {Object} schedule – Расписание Банды
  * @param {Number} duration - Время на ограбление в минутах
@@ -76,16 +179,26 @@ exports.getAppropriateMoment = function (schedule, duration, workingHours) {
     //переводим расписание в формат Date()
     var schedule1 = {};
     schedule1 = newSchedule (schedule);
-    console.info(schedule1);
+    //console.info(schedule1);
+    var freeSchedule = toFreeSchedule (schedule1);
+    //console.info(freeSchedule);
+    var freeTime = gangFreeTime (freeSchedule);
+    //console.info(freeTime);
+    var time_for_robbery = timeForRobbery (freeTime, workingHours);
+    //console.info(time_for_robbery);
+    var time_to_robbery = mainFunction (time_for_robbery, duration);
+    //console.info(time_to_robbery);
 
     return {
+
+        time: time_to_robbery,
 
         /**
          * Найдено ли время
          * @returns {Boolean}
          */
         exists: function () {
-            return false;
+            return (time_to_robbery !== []);
         },
 
         /**
