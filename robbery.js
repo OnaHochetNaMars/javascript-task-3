@@ -107,26 +107,19 @@ function toFreeSchedule(schedule) {
 
 function gangFreeTime(schedule) {
     var freeTime = [];
-    var c = 0;
     var D = schedule.Danny.len;
     var R = schedule.Rusty.len;
     var L = schedule.Linus.len;
-    // console.log (D, R, L);
     for (var i = 0; i < D; i++) {
         for (var j = 0; j < R; j++) {
             for (var k = 0; k < L; k++) {
-                var date1 = schedule.Danny[i];
-                var date2 = schedule.Rusty[j];
-                var date3 = schedule.Linus[k];
-                // console.log (date1);
-                var a = maxFrom (date1, date2, date3);
-                var b = minTo (date1, date2, date3);
+                var a = maxFrom (schedule.Danny[i], schedule.Rusty[j], schedule.Linus[k]);
+                var b = minTo (schedule.Danny[i], schedule.Rusty[j], schedule.Linus[k]);
                 if (b > a) {
-                    freeTime[c] = {
+                    freeTime.push( {
                         from: a,
                         to: b
-                    };
-                    c++;
+                    });
                 }
             }
         }
@@ -135,7 +128,7 @@ function gangFreeTime(schedule) {
     return freeTime;
 }
 
-function timeForRobbery(gangFreeTime, workingHours) {
+function FindtimeForRobbery(gangFreeTime, workingHours) {
     var n = gangFreeTime.length;
     var res = [];
     var c = 0;
@@ -166,17 +159,17 @@ function timeForRobbery(gangFreeTime, workingHours) {
     return res;
 }
 
-function mainFunction(time_to_robbery, duration, res) {// не знаю как назвать функцию=(
+function mainFunction(timeToRobbery, duration) {// не знаю как назвать функцию=(
     var msInDuration = duration * 60 * 1000;
-    // var res = [];
-    var n = time_to_robbery.length;
+    var res = [];
+    var n = timeToRobbery.length;
     var c = 0;
     for (var i = 0; i < n; i++) {
-        var a = (time_to_robbery[i].to - time_to_robbery[i].from);
+        var a = (timeToRobbery[i].to - timeToRobbery[i].from);
         if (a >= msInDuration) {
             //console.log(a);
             res[c] = {};
-            res[c] = time_to_robbery[i];
+            res[c] = timeToRobbery[i];
             c++;
         }
     }
@@ -202,25 +195,20 @@ exports.getAppropriateMoment = function (schedule, duration, workingHours) {
     // переводим расписание в формат Date()
     var schedule1 = {};
     schedule1 = toNewSchedule (schedule);
-    // console.info(schedule1);
     var freeSchedule = toFreeSchedule (schedule1);
-    // console.info(freeSchedule);
     var freeTime = gangFreeTime (freeSchedule);
-    // console.info(freeTime);
-    var time_for_robbery = timeForRobbery (freeTime, workingHours);
-    // console.info(time_for_robbery);
-    var time_to_robbery = mainFunction (time_for_robbery, duration, []);
-    //console.info(time_to_robbery);
+    var timeForRobbery = FindtimeForRobbery (freeTime, workingHours);
+    var timeToRobbery = mainFunction (timeForRobbery, duration);
 
     return {
-        
+
         /**
          * Найдено ли время
          * @returns {Boolean}
          */
         exists: function () {
             // console.log (this.time);
-            return (time_to_robbery !== null);
+            return (timeToRobbery !== null);
         },
 
         /**
