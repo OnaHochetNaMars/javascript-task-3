@@ -27,7 +27,7 @@ function toDate(date) {
 
 function toNewSchedule(schedule) {
     var newSchedule = {};
-    function func() {
+    function func(key) {
         var n = (schedule[key]).length;
         newSchedule[key] = [];
         for (var i = 0; i < n; i++) {
@@ -40,7 +40,7 @@ function toNewSchedule(schedule) {
     }
     for (var key in schedule) {
         if ({}.hasOwnProperty.call(schedule, key)) {
-            func();
+            func(key);
         }
     }
 
@@ -115,26 +115,22 @@ function toFreeSchedule(schedule) {
 
 function gangFreeTime(schedule) {
     var freeTime = [];
-    var D = schedule.Danny.len;
-    var R = schedule.Rusty.len;
-    var L = schedule.Linus.len;
-    function func(i, j, k) {
-        var a = maxFrom (schedule.Danny[i], schedule.Rusty[j], schedule.Linus[k]);
-        var b = minTo (schedule.Danny[i], schedule.Rusty[j], schedule.Linus[k]);
-        if (b > a) {
-            freeTime.push({
-                from: a,
-                to: b
-            });
-        }
-    }
-    for (var i = 0; i < D; i++) {
-        for (var j = 0; j < R; j++) {
-            for (var k = 0; k < L; k++) {
-                func(i, j, k);
-            }
-        }
-    }
+    var a, b;
+    schedule.Danny.forEach(function(i) {
+        schedule.Rusty.forEach(function(j) {
+            schedule.Linus.forEach(function(k) {
+                // console.log([i, j, k]);
+                a = maxFrom (i, j, k);
+                b = minTo (i, j, k);
+                if (b > a) {
+                    freeTime.push({
+                        from: a,
+                        to: b
+                    });
+                }
+            })
+        })
+    });
 
     return freeTime;
 }
