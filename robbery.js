@@ -27,17 +27,20 @@ function toDate(date) {
 
 function toNewSchedule(schedule) {
     var newSchedule = {};
+    function func() {
+        var n = (schedule[key]).length;
+        newSchedule[key] = [];
+        for (var i = 0; i < n; i++) {
+            newSchedule[key].push({
+                from: toDate (schedule[key][i].from),
+                to: toDate (schedule[key][i].to)
+            });
+            newSchedule[key].len = n;
+        }
+    }
     for (var key in schedule) {
         if ({}.hasOwnProperty.call(schedule, key)) {
-            var n = (schedule[key]).length;
-            newSchedule[key] = [];
-            for (var i = 0; i < n; i++) {
-                newSchedule[key][i] = {
-                    from: toDate (schedule[key][i].from),
-                    to: toDate (schedule[key][i].to)
-                };
-                newSchedule[key].len = n;
-            }
+            func();
         }
     }
 
@@ -85,25 +88,26 @@ function minDate(date1, date2) {
 function toFreeSchedule(schedule) {
     var freeSchedule = {};
     for (var key in schedule) {
-        if ({}.hasOwnProperty.call(schedule, key)) {
-            freeSchedule[key] = [];
-            var n = (schedule[key]).length;
-            freeSchedule[key][0] = {
-                from: new Date (2016, 9, 1, 0, 0),
-                to: schedule[key][0].from
-            };
-            for (var i = 1; i < n; i++) {
-                freeSchedule[key][i] = {
-                    from: schedule[key][i - 1].to,
-                    to: schedule[key][i].from
-                };
-            }
-            freeSchedule[key][n] = {
-                from: schedule[key][n - 1].to,
-                to: new Date (2016, 9, 3, 23, 59)
-            };
-            freeSchedule[key].len = n + 1;
+        if (!({}.hasOwnProperty.call(schedule, key))) {
+            return [];
         }
+        freeSchedule[key] = [];
+        var n = (schedule[key]).length;
+        freeSchedule[key][0] = {
+            from: new Date (2016, 9, 1, 0, 0),
+            to: schedule[key][0].from
+        };
+        for (var i = 1; i < n; i++) {
+            freeSchedule[key][i] = {
+                from: schedule[key][i - 1].to,
+                to: schedule[key][i].from
+            };
+        }
+        freeSchedule[key][n] = {
+            from: schedule[key][n - 1].to,
+            to: new Date (2016, 9, 3, 23, 59)
+        };
+        freeSchedule[key].len = n + 1;
     }
 
     return freeSchedule;
@@ -142,19 +146,22 @@ function findTimeForRobbery(freeTime, workingHours) {
     var hours = [];
     var minutes = [];
     var bank = [];
+    var a;
+    var b;
+    var day;
     hours[0] = parseInt (date[0].substring (0, 2)) - parseInt (date[0].substring (5));
     hours[1] = parseInt (date[1].substring (0, 2)) - parseInt (date[1].substring (5));
     minutes[0] = parseInt (date[0].substring (3, 5));
     minutes[1] = parseInt (date[1].substring (3, 5));
     for (var i = 0; i < n; i++) {
-        var day = freeTime[i].from.getDate();
+        day = freeTime[i].from.getDate();
         if (day > 3) {
             return res;
         }
         bank[0] = new Date (2016, 9, day, hours[0], minutes[0]);
         bank[1] = new Date (2016, 9, day, hours[1], minutes[1]);
-        var a = maxDate (freeTime[i].from, bank[0]);
-        var b = minDate (freeTime[i].to, bank[1]);
+        a = maxDate (freeTime[i].from, bank[0]);
+        b = minDate (freeTime[i].to, bank[1]);
         if (b > a) {
             res.push({
                 from: a,
