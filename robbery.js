@@ -115,10 +115,11 @@ function toFreeSchedule(schedule) {
 
 function gangFreeTime(schedule) {
     var freeTime = [];
-    var a, b;
-    schedule.Danny.forEach(function(i) {
-        schedule.Rusty.forEach(function(j) {
-            schedule.Linus.forEach(function(k) {
+    var a;
+    var b;
+    schedule.Danny.forEach(function (i) {
+        schedule.Rusty.forEach(function (j) {
+            schedule.Linus.forEach(function (k) {
                 // console.log([i, j, k]);
                 a = maxFrom (i, j, k);
                 b = minTo (i, j, k);
@@ -128,43 +129,41 @@ function gangFreeTime(schedule) {
                         to: b
                     });
                 }
-            })
-        })
+            });
+        });
     });
 
     return freeTime;
 }
 
-function findTimeForRobbery(freeTime, workingHours) {
-    var n = freeTime.length;
-    var res = [];
+function findTimeForRobbery(freeTime, workingHours, res) {
+    var a;
+    var b;
     var date = [workingHours.from, workingHours.to];
     var hours = [];
     var minutes = [];
     var bank = [];
-    var a;
-    var b;
     var day;
-    hours[0] = parseInt (date[0].substring (0, 2)) - parseInt (date[0].substring (5));
-    hours[1] = parseInt (date[1].substring (0, 2)) - parseInt (date[1].substring (5));
-    minutes[0] = parseInt (date[0].substring (3, 5));
-    minutes[1] = parseInt (date[1].substring (3, 5));
-    for (var i = 0; i < n; i++) {
-        day = freeTime[i].from.getDate();
+    hours[0] = date[0].substring (0, 2) - parseInt (date[0].substring (5));
+    hours[1] = date[1].substring (0, 2) - parseInt (date[1].substring (5));
+    minutes[0] = date[0].substring (3, 5);
+    minutes[1] = date[1].substring (3, 5);
+    freeTime.forEach(function (i) {
+        day = i.from.getDate();
         if (day > 3) {
             return res;
         }
         bank[0] = new Date (2016, 9, day, hours[0], minutes[0]);
         bank[1] = new Date (2016, 9, day, hours[1], minutes[1]);
-        a = maxDate (freeTime[i].from, bank[0]);
-        b = minDate (freeTime[i].to, bank[1]);
+        a = maxDate (i.from, bank[0]);
+        b = minDate (i.to, bank[1]);
         if (b > a) {
             res.push({
                 from: a,
                 to: b
             });
         }
-    }
+    });
 
     return res;
 }
@@ -221,7 +220,7 @@ exports.getAppropriateMoment = function (schedule, duration, workingHours) {
     newSchedule = toNewSchedule (schedule);
     var freeSchedule = toFreeSchedule (newSchedule);
     var freeTime = gangFreeTime (freeSchedule);
-    var timeForRobbery = findTimeForRobbery (freeTime, workingHours);
+    var timeForRobbery = findTimeForRobbery (freeTime, workingHours, []);
     var timeToRobbery = mainFunction (timeForRobbery, duration);
     var gmt = parseInt (workingHours.from.substring(5));
 
