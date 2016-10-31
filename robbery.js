@@ -35,12 +35,15 @@ function toNewSchedule(schedule, bankTime) {
                 from: toDate (schedule[key][i].from, bankTime),
                 to: toDate (schedule[key][i].to, bankTime)
             });
-            newSchedule[key].len = n;
         }
     }
     for (var key in schedule) {
         if ({}.hasOwnProperty.call(schedule, key)) {
             func(key);
+            newSchedule[key].sort(function(a, b) {
+            if (a.from < b.from) return -1;
+            return 1;
+            });
         }
     }
 
