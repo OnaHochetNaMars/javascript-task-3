@@ -19,7 +19,7 @@ var DaysOfWeek = {
 function toDate(date, bankTime) {
     var dayOfWeek = date.substring(0, 2);
     var day = DaysOfWeek[dayOfWeek];
-    var hours = parseInt (date.substring(3, 5)) + parseInt (date.substring(8) - bankTime);
+    var hours = parseInt (date.substring(3, 5)) - parseInt (date.substring(8)) + bankTime;
     var minutes = parseInt (date.substring(6, 8));
 
     return new Date (2016, 9, day, hours, minutes);
@@ -120,7 +120,6 @@ function gangFreeTime(schedule) {
     schedule.Danny.forEach(function (i) {
         schedule.Rusty.forEach(function (j) {
             schedule.Linus.forEach(function (k) {
-                // console.log([i, j, k]);
                 a = maxFrom (i, j, k);
                 b = minTo (i, j, k);
                 if (b > a) {
@@ -143,19 +142,18 @@ function findTimeForRobbery(freeTime, workingHours, res) {
     var hours = [];
     var minutes = [];
     var bank = [];
-    var day = [];
-    hours[0] = date[0].substring (0, 2) - parseInt (date[0].substring (5));
-    hours[1] = date[1].substring (0, 2) - parseInt (date[1].substring (5));
+    var day;
+    hours[0] = date[0].substring (0, 2);
+    hours[1] = date[1].substring (0, 2);
     minutes[0] = date[0].substring (3, 5);
     minutes[1] = date[1].substring (3, 5);
     freeTime.forEach(function (i) {
-        day[0] = i.from.getDate();
-        day[1] = i.to.getDate();
-        if (day > 3 && day < 8) {
+        day = i.from.getDate();
+        if (day > 3) {
             return res;
         }
-        bank[0] = new Date (2016, 9, day[0], hours[0], minutes[0]);
-        bank[1] = new Date (2016, 9, day[1], hours[1], minutes[1]);
+        bank[0] = new Date (2016, 9, day, hours[0], minutes[0]);
+        bank[1] = new Date (2016, 9, day, hours[1], minutes[1]);
         a = maxDate (i.from, bank[0]);
         b = minDate (i.to, bank[1]);
         if (b > a) {
@@ -223,7 +221,6 @@ exports.getAppropriateMoment = function (schedule, duration, workingHours) {
     var freeSchedule = toFreeSchedule (newSchedule);
     var freeTime = gangFreeTime (freeSchedule);
     var timeForRobbery = findTimeForRobbery (freeTime, workingHours, []);
-    // console.log (timeForRobbery);
     var timeToRobbery = mainFunction (timeForRobbery, duration);
 
     return {
