@@ -97,23 +97,32 @@ function toFreeSchedule(schedule) {
         if (!({}.hasOwnProperty.call(schedule, key))) {
             return [];
         }
-        freeSchedule[key] = [];
-        var n = (schedule[key]).length;
-        freeSchedule[key][0] = {
-            from: new Date (2016, 9, 1, 0, 0),
-            to: schedule[key][0].from
-        };
-        for (var i = 1; i < n; i++) {
-            freeSchedule[key][i] = {
-                from: schedule[key][i - 1].to,
-                to: schedule[key][i].from
+        if (schedule[key] = []) {
+            freeSchedule[key] = [];
+            freeSchedule[key][0] = {
+                from: new Date (2016, 9, 1, 0, 0),
+                to: new Date (2016, 9, 7, 23, 59)
             };
         }
-        freeSchedule[key][n] = {
-            from: schedule[key][n - 1].to,
-            to: new Date (2016, 9, 7, 23, 59)
-        };
-        freeSchedule[key].len = n + 1;
+        else {
+            freeSchedule[key] = [];
+            var n = (schedule[key]).length;
+            freeSchedule[key][0] = {
+                from: new Date (2016, 9, 1, 0, 0),
+                to: schedule[key][0].from
+            };
+            for (var i = 1; i < n; i++) {
+                freeSchedule[key][i] = {
+                    from: schedule[key][i - 1].to,
+                    to: schedule[key][i].from
+                };
+            }
+            freeSchedule[key][n] = {
+                from: schedule[key][n - 1].to,
+                to: new Date (2016, 9, 7, 23, 59)
+            };
+            freeSchedule[key].len = n + 1;
+        }
     }
 
     return freeSchedule;
@@ -228,6 +237,7 @@ exports.getAppropriateMoment = function (schedule, duration, workingHours) {
     var freeTime = gangFreeTime (freeSchedule);
     var timeForRobbery = findTimeForRobbery (freeTime, workingHours, []);
     var timeToRobbery = mainFunction (timeForRobbery, duration);
+    console.log (freeTime);
 
     return {
 
