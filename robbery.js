@@ -16,24 +16,24 @@ var DaysOfWeek = {
     'ВС': 7
 };
 
-function toDate(date) {
+function toDate(date, bankTime) {
     var dayOfWeek = date.substring(0, 2);
     var day = DaysOfWeek[dayOfWeek];
-    var hours = parseInt (date.substring(3, 5)) - parseInt (date.substring(8));
+    var hours = parseInt (date.substring(3, 5)) + parseInt (date.substring(8) - bankTime);
     var minutes = parseInt (date.substring(6, 8));
 
     return new Date (2016, 9, day, hours, minutes);
 }
 
-function toNewSchedule(schedule) {
+function toNewSchedule(schedule, bankTime) {
     var newSchedule = {};
     function func(key) {
         var n = (schedule[key]).length;
         newSchedule[key] = [];
         for (var i = 0; i < n; i++) {
             newSchedule[key].push({
-                from: toDate (schedule[key][i].from),
-                to: toDate (schedule[key][i].to)
+                from: toDate (schedule[key][i].from, bankTime),
+                to: toDate (schedule[key][i].to, bankTime)
             });
             newSchedule[key].len = n;
         }
@@ -85,7 +85,7 @@ function minDate(date1, date2) {
     return date2;
 }
 
-function toFreeSchedule(schedule, bankTimeZone) {
+function toFreeSchedule(schedule) {
     var freeSchedule = {};
     for (var key in schedule) {
         if (!({}.hasOwnProperty.call(schedule, key))) {
@@ -94,7 +94,7 @@ function toFreeSchedule(schedule, bankTimeZone) {
         freeSchedule[key] = [];
         var n = (schedule[key]).length;
         freeSchedule[key][0] = {
-            from: new Date (2016, 9, 1, -bankTimeZone, 0),
+            from: new Date (2016, 9, 1, 0, 0),
             to: schedule[key][0].from
         };
         for (var i = 1; i < n; i++) {
@@ -143,20 +143,24 @@ function findTimeForRobbery(freeTime, workingHours, res) {
     var hours = [];
     var minutes = [];
     var bank = [];
-    var day;
+    var day = [];
     hours[0] = date[0].substring (0, 2) - parseInt (date[0].substring (5));
     hours[1] = date[1].substring (0, 2) - parseInt (date[1].substring (5));
     minutes[0] = date[0].substring (3, 5);
     minutes[1] = date[1].substring (3, 5);
     freeTime.forEach(function (i) {
-        day = i.from.getDate();
-        if (day > 3) {
+        day[0] = i.from.getDate();
+        day[1] = i.to.getDate();
+        if (day > 3 && day < 8) {
             return res;
         }
-        bank[0] = new Date (2016, 9, day, hours[0], minutes[0]);
-        bank[1] = new Date (2016, 9, day, hours[1], minutes[1]);
+        bank[0] = new Date (2016, 9, day[0], hours[0], minutes[0]);
+        bank[1] = new Date (2016, 9, day[1], hours[1], minutes[1]);
         a = maxDate (i.from, bank[0]);
         b = minDate (i.to, bank[1]);
+        console.log (a);
+        console.log (b);
+        console.log ('');
         if (b > a) {
             res.push({
                 from: a,
@@ -188,9 +192,9 @@ function mainFunction(timeToRobbery, duration) { // не знаю как наз�
     return res; // время для ограбления
 }
 
-function formateDate(date, gmt) {
+function formateDate(date) {
     var day = date.getDate();
-    var hours = date.getHours() + gmt;
+    var hours = date.getHours();
     var minutes = date.getMinutes();
     var week = ['', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
     day = week[day];
@@ -218,10 +222,11 @@ function formateDate(date, gmt) {
 exports.getAppropriateMoment = function (schedule, duration, workingHours) {
     var newSchedule = {};
     var gmt = parseInt (workingHours.from.substring(5));
-    newSchedule = toNewSchedule (schedule);
-    var freeSchedule = toFreeSchedule (newSchedule, gmt);
+    newSchedule = toNewSchedule (schedule, gmt);
+    var freeSchedule = toFreeSchedule (newSchedule);
     var freeTime = gangFreeTime (freeSchedule);
     var timeForRobbery = findTimeForRobbery (freeTime, workingHours, []);
+    // console.log (timeForRobbery);
     var timeToRobbery = mainFunction (timeForRobbery, duration);
 
     return {
@@ -246,7 +251,7 @@ exports.getAppropriateMoment = function (schedule, duration, workingHours) {
             if (!this.exists()) {
                 return '';
             }
-            var format = formateDate(timeToRobbery[0].from, gmt);
+            var format = formateDate(timeToRobbery[0].from);
             var newTemplate = template
                 .replace('%DD', format[0])
                 .replace('%HH', format[1])
