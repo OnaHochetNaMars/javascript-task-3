@@ -40,9 +40,10 @@ function toNewSchedule(schedule, bankTime) {
     for (var key in schedule) {
         if ({}.hasOwnProperty.call(schedule, key)) {
             func(key);
-            newSchedule[key].sort(function(a, b) {
-            if (a.from < b.from) return -1;
-            return 1;
+            newSchedule[key].sort(function (a, b) {
+                if (a.from < b.from) return -1;
+
+                return 1;
             });
         }
     }
