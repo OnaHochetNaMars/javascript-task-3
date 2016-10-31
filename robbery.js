@@ -158,9 +158,6 @@ function findTimeForRobbery(freeTime, workingHours, res) {
         bank[1] = new Date (2016, 9, day[1], hours[1], minutes[1]);
         a = maxDate (i.from, bank[0]);
         b = minDate (i.to, bank[1]);
-        console.log (a);
-        console.log (b);
-        console.log ('');
         if (b > a) {
             res.push({
                 from: a,
