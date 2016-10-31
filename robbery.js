@@ -85,7 +85,7 @@ function minDate(date1, date2) {
     return date2;
 }
 
-function toFreeSchedule(schedule) {
+function toFreeSchedule(schedule, bankTimeZone) {
     var freeSchedule = {};
     for (var key in schedule) {
         if (!({}.hasOwnProperty.call(schedule, key))) {
@@ -94,7 +94,7 @@ function toFreeSchedule(schedule) {
         freeSchedule[key] = [];
         var n = (schedule[key]).length;
         freeSchedule[key][0] = {
-            from: new Date (2016, 9, 1, 0, 0),
+            from: new Date (2016, 9, 1, -bankTimeZone, 0),
             to: schedule[key][0].from
         };
         for (var i = 1; i < n; i++) {
@@ -217,12 +217,12 @@ function formateDate(date, gmt) {
 
 exports.getAppropriateMoment = function (schedule, duration, workingHours) {
     var newSchedule = {};
+    var gmt = parseInt (workingHours.from.substring(5));
     newSchedule = toNewSchedule (schedule);
-    var freeSchedule = toFreeSchedule (newSchedule);
+    var freeSchedule = toFreeSchedule (newSchedule, gmt);
     var freeTime = gangFreeTime (freeSchedule);
     var timeForRobbery = findTimeForRobbery (freeTime, workingHours, []);
     var timeToRobbery = mainFunction (timeForRobbery, duration);
-    var gmt = parseInt (workingHours.from.substring(5));
 
     return {
 
