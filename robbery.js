@@ -105,7 +105,7 @@ function toFreeSchedule(schedule, bankTimeZone) {
         }
         freeSchedule[key][n] = {
             from: schedule[key][n - 1].to,
-            to: new Date (2016, 9, 3, 23, 59)
+            to: new Date (2016, 9, 7, 23, 59)
         };
         freeSchedule[key].len = n + 1;
     }
