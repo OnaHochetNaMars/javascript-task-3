@@ -29,32 +29,31 @@ function toNewSchedule(schedule, bankTime) {
     var newSchedule = {};
     function func(key) {
         var n = (schedule[key]).length;
-        newSchedule[key] = [];
-        for (var i = 0; i < n; i++) {
-            newSchedule[key].push({
-                from: toDate (schedule[key][i].from, bankTime),
-                to: toDate (schedule[key][i].to, bankTime)
-            });
-        }
-    }
-    for (var key in schedule) {
-        if ({}.hasOwnProperty.call(schedule, key)) {
-            if ((schedule[key]).length === 0) {
+        if (n === 0) {
                 newSchedule[key] = [{
                     from: new Date (2016, 9, 1, 0, 0),
                     to: new Date (2016, 9, 1, 0, 0)
                 }];
-            } else
-            {
-                func(key);
-                newSchedule[key].sort(function (a, b) {
-                    if (a.from < b.from) {
-                        return -1;
-                    }
-
-                    return 1;
+        } else {
+            newSchedule[key] = [];
+            for (var i = 0; i < n; i++) {
+                newSchedule[key].push({
+                    from: toDate (schedule[key][i].from, bankTime),
+                    to: toDate (schedule[key][i].to, bankTime)
                 });
             }
+        }
+    }
+    for (var key in schedule) {
+        if ({}.hasOwnProperty.call(schedule, key)) {
+            func(key);
+            newSchedule[key].sort(function (a, b) {
+                if (a.from < b.from) {
+                    return -1;
+                }
+
+                return 1;
+            });
         }
     }
 
@@ -220,7 +219,7 @@ function formateDate(date) {
     return [day, hours, minutes];
 }
 
-function formateFreeTime (freeTime) {
+function formateFreeTime(freeTime) {
     var res = [];
     freeTime.forEach(function (interval) {
         var day1 = interval.from.getDate();
@@ -235,7 +234,7 @@ function formateFreeTime (freeTime) {
             res.push(
                 {
                     from: interval.from,
-                    to: new Date (2016, 9, day1, 23, 59) 
+                    to: new Date (2016, 9, day1, 23, 59)
                 },
                 {
                     from: new Date (2016, 9, day2, 0, 0),
@@ -265,7 +264,7 @@ exports.getAppropriateMoment = function (schedule, duration, workingHours) {
     // console.log (freeSchedule);
     var freeTime = gangFreeTime (freeSchedule);
     // console.log (freeTime);
-    var freeTime = formateFreeTime (freeTime);
+    freeTime = formateFreeTime (freeTime);
     var timeForRobbery = findTimeForRobbery (freeTime, workingHours, []);
     var timeToRobbery = mainFunction (timeForRobbery, duration);
 
