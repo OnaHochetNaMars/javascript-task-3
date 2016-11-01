@@ -30,10 +30,10 @@ function toNewSchedule(schedule, bankTime) {
     function func(key) {
         var n = (schedule[key]).length;
         if (n === 0) {
-                newSchedule[key] = [{
-                    from: new Date (2016, 9, 1, 0, 0),
-                    to: new Date (2016, 9, 1, 0, 0)
-                }];
+            newSchedule[key] = [{
+                from: new Date (2016, 9, 1, 0, 0),
+                to: new Date (2016, 9, 1, 0, 0)
+            }];
         } else {
             newSchedule[key] = [];
             for (var i = 0; i < n; i++) {
