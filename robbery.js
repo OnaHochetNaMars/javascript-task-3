@@ -259,6 +259,11 @@ function formateFreeTime(freeTime) {
             );
         }
     });
+    var i = res.length - 1;
+    while (res[i].from.getDate() > 3) {
+        delete res[i];
+        i--;
+    }
 
     return res;
 }
