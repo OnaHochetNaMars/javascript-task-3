@@ -242,6 +242,22 @@ function formateFreeTime(freeTime) {
                 }
             );
         }
+        if (day2 > day1 + 1) {
+            res.push(
+                {
+                    from: interval.from,
+                    to: new Date (2016, 9, day1, 23, 59)
+                },
+                {
+                    from: new Date (2016, 9, day1 + 1, 0, 0),
+                    to: new Date (2016, 9, day1 + 1, 23, 59)
+                },
+                {
+                    from: new Date (2016, 9, day1 + 2, 0, 0),
+                    to: interval.to
+                }
+            );
+        }
     });
 
     return res;
@@ -265,6 +281,7 @@ exports.getAppropriateMoment = function (schedule, duration, workingHours) {
     var freeTime = gangFreeTime (freeSchedule);
     // console.log (freeTime);
     freeTime = formateFreeTime (freeTime);
+    // console.log (freeTime);
     var timeForRobbery = findTimeForRobbery (freeTime, workingHours, []);
     var timeToRobbery = mainFunction (timeForRobbery, duration);
 
