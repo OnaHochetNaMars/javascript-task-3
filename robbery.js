@@ -45,7 +45,7 @@ function toNewSchedule(schedule, bankTimeZone) {
     return newSchedule;
 }
 
-// minOrMax = 1 если нужно найти максимум и 
+// minOrMax = 1 если нужно найти максимум и
 // -1 если нужно найти минимум
 function compareDate(minOrMax) {
     var dates = [].slice.call(arguments, 1);
@@ -107,7 +107,7 @@ function gangFreeTime(schedule) {
 function dateToObject(date) {
     return {
         hours: parseInt(date.slice(0, 2), 10),
-        minutes: parseInt(date. slice(3, 5), 10)
+        minutes: parseInt(date.slice(3, 5), 10)
     };
 }
 
@@ -183,6 +183,7 @@ function formateFreeTime(freeTime) {
             });
         }
     });
+
     return res;
 }
 
