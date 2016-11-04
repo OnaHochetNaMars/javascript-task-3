@@ -82,7 +82,7 @@ function toFreeSchedule(schedule) {
     return freeSchedule;
 }
 
-function gangFreeTime(schedule) {
+function findGangFreeTime(schedule) {
     var freeTime = [];
     var begin;
     var end;
@@ -100,8 +100,25 @@ function gangFreeTime(schedule) {
             });
         });
     });
+    freeTime = formateFreeTime (freeTime);
 
     return freeTime;
+}
+
+function formateFreeTime(freeTime) {
+    var res = [];
+    freeTime.forEach(function (interval) {
+        var day1 = interval.from.getDate();
+        var day2 = interval.to.getDate();
+        for (var i = day1; i <= Math.min(day2, 3); i++) {
+            res.push({
+                from: compareDate (1, new Date (YEAR, MONTH, i, 0, 0), interval.from),
+                to: compareDate (-1, new Date (YEAR, MONTH, i, 23, 59), interval.to)
+            });
+        }
+    });
+
+    return res;
 }
 
 function dateToObject(date) {
@@ -111,7 +128,7 @@ function dateToObject(date) {
     };
 }
 
-function findTimeForRobbery(freeTime, workingHours, res) {
+function findFreeIntervals(freeTime, workingHours, res) {
     var startBankWork = dateToObject(workingHours.from);
     var endBankWork = dateToObject(workingHours.to);
     var bank = {};
@@ -171,22 +188,6 @@ function formateDate(date) {
     return [day, hours, minutes];
 }
 
-function formateFreeTime(freeTime) {
-    var res = [];
-    freeTime.forEach(function (interval) {
-        var day1 = interval.from.getDate();
-        var day2 = interval.to.getDate();
-        for (var i = day1; i <= Math.min(day2, 3); i++) {
-            res.push({
-                from: compareDate (1, new Date (YEAR, MONTH, i, 0, 0), interval.from),
-                to: compareDate (-1, new Date (YEAR, MONTH, i, 23, 59), interval.to)
-            });
-        }
-    });
-
-    return res;
-}
-
 /**
  * @param {Object} schedule – Расписание Банды
  * @param {Number} duration - Время на ограбление в минутах
@@ -202,10 +203,9 @@ exports.getAppropriateMoment = function (schedule, duration, workingHours) {
     var msInDuration = 60 * 1000 * duration;
     newSchedule = toNewSchedule (schedule, gmt);
     var freeSchedule = toFreeSchedule (newSchedule);
-    var freeTime = gangFreeTime (freeSchedule);
-    freeTime = formateFreeTime (freeTime);
-    var timeForRobbery = findTimeForRobbery (freeTime, workingHours, []);
-    var timeToRobbery = mainFunction (timeForRobbery, msInDuration);
+    var freeTime = findGangFreeTime (freeSchedule);
+    var timeForRobbery = findFreeIntervals (freeTime, workingHours, []);
+    timeForRobbery = mainFunction (timeForRobbery, msInDuration);
 
     return {
 
@@ -215,7 +215,7 @@ exports.getAppropriateMoment = function (schedule, duration, workingHours) {
          */
         exists: function () {
 
-            return (timeToRobbery !== null);
+            return (timeForRobbery !== null);
         },
 
         /**
@@ -229,7 +229,7 @@ exports.getAppropriateMoment = function (schedule, duration, workingHours) {
             if (!this.exists()) {
                 return '';
             }
-            var format = formateDate(timeToRobbery[0].from);
+            var format = formateDate(timeForRobbery[0].from);
             var newTemplate = template
                 .replace('%DD', format[0])
                 .replace('%HH', format[1])
