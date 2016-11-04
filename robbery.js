@@ -6,108 +6,64 @@
  */
 exports.isStar = false;
 
-var DaysOfWeek = {
-    'ПН': 1,
-    'ВТ': 2,
-    'СР': 3,
-    'ЧТ': 4,
-    'ПТ': 5,
-    'СБ': 6,
-    'ВС': 7
-};
+var WEEK = ['', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
+var YEAR = 2016;
+var MONTH = 9;
+var BEGIN_OF_WEEK = new Date (YEAR, MONTH, 1, 0, 0);
+var END_OF_WEEK = new Date (YEAR, MONTH, 7, 23, 59);
 
-function toDate(date, bankTime) {
-    var dayOfWeek = date.substring(0, 2);
-    var day = DaysOfWeek[dayOfWeek];
-    var hours = parseInt (date.substring(3, 5)) - parseInt (date.substring(8)) + bankTime;
-    var minutes = parseInt (date.substring(6, 8));
+function toTypeDate(date, bankTimeZone) {
+    var dayOfWeek = date.slice(0, 2);
+    var currentDay = WEEK.indexOf(dayOfWeek);
+    var hours = parseInt (date.slice(3, 5), 10) - parseInt (date.slice(8), 10) + bankTimeZone;
+    var minutes = parseInt (date.slice(6, 8), 10);
 
-    return new Date (2016, 9, day, hours, minutes);
+    return new Date (YEAR, MONTH, currentDay, hours, minutes);
 }
 
-function toNewSchedule(schedule, bankTime) {
+function toNewSchedule(schedule, bankTimeZone) {
     var newSchedule = {};
-    function func(key) {
+    var keys = Object.keys(schedule);
+    keys.forEach(function (key) {
         var n = (schedule[key]).length;
         if (n === 0) {
             newSchedule[key] = [{
-                from: new Date (2016, 9, 1, 0, 0),
-                to: new Date (2016, 9, 1, 0, 0)
+                from: BEGIN_OF_WEEK,
+                to: BEGIN_OF_WEEK
             }];
         } else {
             newSchedule[key] = [];
             for (var i = 0; i < n; i++) {
                 newSchedule[key].push({
-                    from: toDate (schedule[key][i].from, bankTime),
-                    to: toDate (schedule[key][i].to, bankTime)
+                    from: toTypeDate (schedule[key][i].from, bankTimeZone),
+                    to: toTypeDate (schedule[key][i].to, bankTimeZone)
                 });
             }
         }
-    }
-    for (var key in schedule) {
-        if ({}.hasOwnProperty.call(schedule, key)) {
-            func(key);
-            newSchedule[key].sort(function (a, b) {
-                if (a.from < b.from) {
-                    return -1;
-                }
-
-                return 1;
-            });
-        }
-    }
+    });
 
     return newSchedule;
 }
 
-function maxFrom(date1, date2, date3) {
-    if (date1.from > date2.from && date1.from > date3.from) {
-        return date1.from;
-    }
-    if (date2.from > date3.from) {
-        return date2.from;
-    }
+// minOrMax = 1 если нужно найти максимум и 
+// -1 если нужно найти минимум
+function compareDate(minOrMax) {
+    var dates = [].slice.call(arguments, 1);
+    dates.sort (function (date1, date2) {
+        return (date2 - date1) * minOrMax;
+    });
 
-    return date3.from;
-}
-
-function minTo(date1, date2, date3) {
-    if (date1.to < date2.to && date1.to < date3.to) {
-        return date1.to;
-    }
-    if (date2.to < date3.to) {
-        return date2.to;
-    }
-
-    return date3.to;
-}
-
-function maxDate(date1, date2) {
-    if (date1 > date2) {
-        return date1;
-    }
-
-    return date2;
-}
-
-function minDate(date1, date2) {
-    if (date1 < date2) {
-        return date1;
-    }
-
-    return date2;
+    return dates[0];
 }
 
 function toFreeSchedule(schedule) {
     var freeSchedule = {};
-    for (var key in schedule) {
-        if (!({}.hasOwnProperty.call(schedule, key))) {
-            return [];
-        }
+    var keys = Object.keys(schedule);
+    keys.forEach(function (key) {
         freeSchedule[key] = [];
         var n = (schedule[key]).length;
         freeSchedule[key][0] = {
-            from: new Date (2016, 9, 1, 0, 0),
+            from: BEGIN_OF_WEEK,
             to: schedule[key][0].from
         };
         for (var i = 1; i < n; i++) {
@@ -118,27 +74,27 @@ function toFreeSchedule(schedule) {
         }
         freeSchedule[key][n] = {
             from: schedule[key][n - 1].to,
-            to: new Date (2016, 9, 7, 23, 59)
+            to: END_OF_WEEK
         };
         freeSchedule[key].len = n + 1;
-    }
+    });
 
     return freeSchedule;
 }
 
 function gangFreeTime(schedule) {
     var freeTime = [];
-    var a;
-    var b;
+    var begin;
+    var end;
     schedule.Danny.forEach(function (i) {
         schedule.Rusty.forEach(function (j) {
             schedule.Linus.forEach(function (k) {
-                a = maxFrom (i, j, k);
-                b = minTo (i, j, k);
-                if (b > a) {
+                begin = compareDate (1, i.from, j.from, k.from);
+                end = compareDate (-1, i.to, j.to, k.to);
+                if (end > begin) {
                     freeTime.push({
-                        from: a,
-                        to: b
+                        from: begin,
+                        to: end
                     });
                 }
             });
@@ -148,32 +104,27 @@ function gangFreeTime(schedule) {
     return freeTime;
 }
 
+function dateToObject(date) {
+    return {
+        hours: parseInt(date.slice(0, 2), 10),
+        minutes: parseInt(date. slice(3, 5), 10)
+    };
+}
+
 function findTimeForRobbery(freeTime, workingHours, res) {
-    var a;
-    var b;
-    var date = [workingHours.from, workingHours.to];
-    var hours = [];
-    var minutes = [];
-    var bank = [];
-    var day = [];
-    hours[0] = date[0].substring (0, 2);
-    hours[1] = date[1].substring (0, 2);
-    minutes[0] = date[0].substring (3, 5);
-    minutes[1] = date[1].substring (3, 5);
+    var startBankWork = dateToObject(workingHours.from);
+    var endBankWork = dateToObject(workingHours.to);
+    var bank = {};
     freeTime.forEach(function (interval) {
-        day[0] = interval.from.getDate();
-        day[1] = interval.to.getDate();
-        if (day > 3) {
-            return res;
-        }
-        bank[0] = new Date (2016, 9, day[0], hours[0], minutes[0]);
-        bank[1] = new Date (2016, 9, day[0], hours[1], minutes[1]);
-        a = maxDate (interval.from, bank[0]);
-        b = minDate (interval.to, bank[1]);
-        if (b > a) {
+        var day = interval.from.getDate();
+        bank.start = new Date (YEAR, MONTH, day, startBankWork.hours, startBankWork.minutes);
+        bank.end = new Date (YEAR, MONTH, day, endBankWork.hours, endBankWork.minutes);
+        var begin = compareDate (1, interval.from, bank.start);
+        var end = compareDate (-1, interval.to, bank.end);
+        if (end > begin) {
             res.push({
-                from: a,
-                to: b
+                from: begin,
+                to: end
             });
         }
     });
@@ -181,8 +132,7 @@ function findTimeForRobbery(freeTime, workingHours, res) {
     return res;
 }
 
-function mainFunction(timeToRobbery, duration) { // не знаю как назвать функцию=(
-    var msInDuration = duration * 60 * 1000;
+function mainFunction(timeToRobbery, msInDuration) {
     var res = [];
     var n = timeToRobbery.length;
     var c = 0;
@@ -201,20 +151,22 @@ function mainFunction(timeToRobbery, duration) { // не знаю как наз�
     return res; // время для ограбления
 }
 
+function toString(number) {
+    if (number < 10) {
+        number = '0' + number;
+    }
+    number = String(number);
+
+    return number;
+}
+
 function formateDate(date) {
     var day = date.getDate();
     var hours = date.getHours();
     var minutes = date.getMinutes();
-    var week = ['', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
-    day = week[day];
-    if (hours < 10) {
-        hours = '0' + hours;
-    }
-    hours = String(hours);
-    if (minutes < 10) {
-        minutes = '0' + minutes;
-    }
-    minutes = String(minutes);
+    day = WEEK[day];
+    hours = toString (hours);
+    minutes = toString(minutes);
 
     return [day, hours, minutes];
 }
@@ -224,47 +176,13 @@ function formateFreeTime(freeTime) {
     freeTime.forEach(function (interval) {
         var day1 = interval.from.getDate();
         var day2 = interval.to.getDate();
-        if (day1 === day2) {
+        for (var i = day1; i <= Math.min(day2, 3); i++) {
             res.push({
-                from: interval.from,
-                to: interval.to
+                from: compareDate (1, new Date (YEAR, MONTH, i, 0, 0), interval.from),
+                to: compareDate (-1, new Date (YEAR, MONTH, i, 23, 59), interval.to)
             });
         }
-        if (day2 === day1 + 1) {
-            res.push(
-                {
-                    from: interval.from,
-                    to: new Date (2016, 9, day1, 23, 59)
-                },
-                {
-                    from: new Date (2016, 9, day2, 0, 0),
-                    to: interval.to
-                }
-            );
-        }
-        if (day2 > day1 + 1) {
-            res.push(
-                {
-                    from: interval.from,
-                    to: new Date (2016, 9, day1, 23, 59)
-                },
-                {
-                    from: new Date (2016, 9, day1 + 1, 0, 0),
-                    to: new Date (2016, 9, day1 + 1, 23, 59)
-                },
-                {
-                    from: new Date (2016, 9, day1 + 2, 0, 0),
-                    to: interval.to
-                }
-            );
-        }
     });
-    var i = res.length - 1;
-    while (res[i].from.getDate() > 3) {
-        delete res[i];
-        i--;
-    }
-
     return res;
 }
 
@@ -279,16 +197,14 @@ function formateFreeTime(freeTime) {
 
 exports.getAppropriateMoment = function (schedule, duration, workingHours) {
     var newSchedule = {};
-    var gmt = parseInt (workingHours.from.substring(5));
+    var gmt = parseInt (workingHours.from.slice(5), 10);
+    var msInDuration = 60 * 1000 * duration;
     newSchedule = toNewSchedule (schedule, gmt);
     var freeSchedule = toFreeSchedule (newSchedule);
-    // console.log (freeSchedule);
     var freeTime = gangFreeTime (freeSchedule);
-    // console.log (freeTime);
     freeTime = formateFreeTime (freeTime);
-    // console.log (freeTime);
     var timeForRobbery = findTimeForRobbery (freeTime, workingHours, []);
-    var timeToRobbery = mainFunction (timeForRobbery, duration);
+    var timeToRobbery = mainFunction (timeForRobbery, msInDuration);
 
     return {
 
