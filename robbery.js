@@ -7,90 +7,73 @@
 exports.isStar = false;
 
 var WEEK = ['', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
-var YEAR = 2016;
-var MONTH = 9;
-var BEGIN_OF_WEEK = new Date (YEAR, MONTH, 1, 0, 0);
-var END_OF_WEEK = new Date (YEAR, MONTH, 7, 23, 59);
+var BEGIN_OF_WEEK = new Date (0, 0, 1, 0, 0);
+var END_OF_WEEK = new Date (0, 0, 7, 23, 59);
+var msInMinute = 60000;
 
-function toTypeDate(date, bankTimeZone) {
+function leadToDataType(date, bankTimeZone) {
     var dayOfWeek = date.slice(0, 2);
     var currentDay = WEEK.indexOf(dayOfWeek);
-    var hours = parseInt (date.slice(3, 5), 10) - parseInt (date.slice(8), 10) + bankTimeZone;
-    var minutes = parseInt (date.slice(6, 8), 10);
+    var hours = parseInt(date.slice(3, 5), 10);
+    var timeZone = parseInt(date.slice(8), 10);
+    hours = hours - timeZone + bankTimeZone;
+    var minutes = parseInt(date.slice(6, 8), 10);
 
-    return new Date (YEAR, MONTH, currentDay, hours, minutes);
+    return new Date (0, 0, currentDay, hours, minutes);
 }
 
-function toNewSchedule(schedule, bankTimeZone) {
-    var newSchedule = {};
-    var keys = Object.keys(schedule);
-    keys.forEach(function (key) {
-        var n = (schedule[key]).length;
-        if (n === 0) {
-            newSchedule[key] = [{
-                from: BEGIN_OF_WEEK,
-                to: BEGIN_OF_WEEK
-            }];
-        } else {
-            newSchedule[key] = [];
-            for (var i = 0; i < n; i++) {
-                newSchedule[key].push({
-                    from: toTypeDate (schedule[key][i].from, bankTimeZone),
-                    to: toTypeDate (schedule[key][i].to, bankTimeZone)
-                });
-            }
-        }
-    });
+function maxDate() {
+    var dates = [].slice.call(arguments);
+    dates.sort(function (date1, date2) {
 
-    return newSchedule;
-}
-
-// minOrMax = 1 если нужно найти максимум и
-// -1 если нужно найти минимум
-function compareDate(minOrMax) {
-    var dates = [].slice.call(arguments, 1);
-    dates.sort (function (date1, date2) {
-        return (date2 - date1) * minOrMax;
+        return (date2 - date1);
     });
 
     return dates[0];
 }
 
-function toFreeSchedule(schedule) {
+function minDate() {
+    var dates = [].slice.call(arguments);
+    dates.sort(function (date1, date2) {
+
+        return (date1 - date2);
+    });
+
+    return dates[0];
+}
+
+function toFreeSchedule(schedule, bankTimeZone) {
     var freeSchedule = {};
     var keys = Object.keys(schedule);
     keys.forEach(function (key) {
+        var length = (schedule[key]).length;
         freeSchedule[key] = [];
-        var n = (schedule[key]).length;
-        freeSchedule[key][0] = {
+        freeSchedule[key].push({
             from: BEGIN_OF_WEEK,
-            to: schedule[key][0].from
-        };
-        for (var i = 1; i < n; i++) {
-            freeSchedule[key][i] = {
-                from: schedule[key][i - 1].to,
-                to: schedule[key][i].from
-            };
+            to: leadToDataType (schedule[key][0].from, bankTimeZone)
+        });
+        for (var i = 1; i < length; i++) {
+            freeSchedule[key].push({
+                from: leadToDataType (schedule[key][i - 1].to, bankTimeZone),
+                to: leadToDataType (schedule[key][i].from, bankTimeZone)
+            });
         }
-        freeSchedule[key][n] = {
-            from: schedule[key][n - 1].to,
+        freeSchedule[key].push({
+            from: leadToDataType (schedule[key][length - 1].to, bankTimeZone),
             to: END_OF_WEEK
-        };
-        freeSchedule[key].len = n + 1;
+        });
     });
 
     return freeSchedule;
 }
 
-function findGangFreeTime(schedule) {
+function getGangFreeTime(schedule) {
     var freeTime = [];
-    var begin;
-    var end;
-    schedule.Danny.forEach(function (i) {
-        schedule.Rusty.forEach(function (j) {
-            schedule.Linus.forEach(function (k) {
-                begin = compareDate (1, i.from, j.from, k.from);
-                end = compareDate (-1, i.to, j.to, k.to);
+    schedule.Danny.forEach(function (interval1) {
+        schedule.Rusty.forEach(function (interval2) {
+            schedule.Linus.forEach(function (interval3) {
+                var begin = maxDate (interval1.from, interval2.from, interval3.from);
+                var end = minDate (interval1.to, interval2.to, interval3.to);
                 if (end > begin) {
                     freeTime.push({
                         from: begin,
@@ -112,8 +95,8 @@ function formateFreeTime(freeTime) {
         var day2 = interval.to.getDate();
         for (var i = day1; i <= Math.min(day2, 3); i++) {
             res.push({
-                from: compareDate (1, new Date (YEAR, MONTH, i, 0, 0), interval.from),
-                to: compareDate (-1, new Date (YEAR, MONTH, i, 23, 59), interval.to)
+                from: maxDate (new Date (0, 0, i, 0, 0), interval.from),
+                to: minDate (new Date (0, 0, i, 23, 59), interval.to)
             });
         }
     });
@@ -128,16 +111,16 @@ function dateToObject(date) {
     };
 }
 
-function findFreeIntervals(freeTime, workingHours, res) {
+function getFreeIntervals(freeTime, workingHours, res) {
     var startBankWork = dateToObject(workingHours.from);
     var endBankWork = dateToObject(workingHours.to);
     var bank = {};
     freeTime.forEach(function (interval) {
         var day = interval.from.getDate();
-        bank.start = new Date (YEAR, MONTH, day, startBankWork.hours, startBankWork.minutes);
-        bank.end = new Date (YEAR, MONTH, day, endBankWork.hours, endBankWork.minutes);
-        var begin = compareDate (1, interval.from, bank.start);
-        var end = compareDate (-1, interval.to, bank.end);
+        bank.start = new Date (0, 0, day, startBankWork.hours, startBankWork.minutes);
+        bank.end = new Date (0, 0, day, endBankWork.hours, endBankWork.minutes);
+        var begin = maxDate (interval.from, bank.start);
+        var end = minDate (interval.to, bank.end);
         if (end > begin) {
             res.push({
                 from: begin,
@@ -151,17 +134,13 @@ function findFreeIntervals(freeTime, workingHours, res) {
 
 function mainFunction(timeToRobbery, msInDuration) {
     var res = [];
-    var n = timeToRobbery.length;
-    var c = 0;
-    for (var i = 0; i < n; i++) {
+    for (var i = 0; i < timeToRobbery.length; i++) {
         var a = (timeToRobbery[i].to - timeToRobbery[i].from);
         if (a >= msInDuration) {
-            res[c] = {};
-            res[c] = timeToRobbery[i];
-            c++;
+            res.push(timeToRobbery[i]);
         }
     }
-    if (c === 0) {
+    if (res.length === 0) {
         return null;
     }
 
@@ -172,7 +151,7 @@ function toString(number) {
     if (number < 10) {
         number = '0' + number;
     }
-    number = String(number);
+    number.toString();
 
     return number;
 }
@@ -199,12 +178,11 @@ function formateDate(date) {
 
 exports.getAppropriateMoment = function (schedule, duration, workingHours) {
     var newSchedule = {};
-    var gmt = parseInt (workingHours.from.slice(5), 10);
-    var msInDuration = 60 * 1000 * duration;
-    newSchedule = toNewSchedule (schedule, gmt);
-    var freeSchedule = toFreeSchedule (newSchedule);
-    var freeTime = findGangFreeTime (freeSchedule);
-    var timeForRobbery = findFreeIntervals (freeTime, workingHours, []);
+    var gmt = parseInt(workingHours.from.slice(5), 10);
+    var msInDuration = msInMinute * duration;
+    var freeSchedule = toFreeSchedule (schedule, gmt);
+    var freeTime = getGangFreeTime (freeSchedule);
+    var timeForRobbery = getFreeIntervals (freeTime, workingHours, []);
     timeForRobbery = mainFunction (timeForRobbery, msInDuration);
 
     return {
