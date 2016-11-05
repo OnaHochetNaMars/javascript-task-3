@@ -48,20 +48,27 @@ function findFreeGangsterTime(schedule, bankTimeZone) {
     keys.forEach(function (key) {
         var length = (schedule[key]).length;
         freeSchedule[key] = [];
-        freeSchedule[key].push({
-            from: BEGIN_OF_WEEK,
-            to: leadToDataType (schedule[key][0].from, bankTimeZone)
-        });
-        for (var i = 1; i < length; i++) {
+        if (length === 0) {
+            freeSchedule[key] = [{
+                from: BEGIN_OF_WEEK,
+                to: END_OF_WEEK
+            }];
+        } else {
             freeSchedule[key].push({
-                from: leadToDataType (schedule[key][i - 1].to, bankTimeZone),
-                to: leadToDataType (schedule[key][i].from, bankTimeZone)
+                from: BEGIN_OF_WEEK,
+                to: leadToDataType (schedule[key][0].from, bankTimeZone)
+            });
+            for (var i = 1; i < length; i++) {
+                freeSchedule[key].push({
+                    from: leadToDataType (schedule[key][i - 1].to, bankTimeZone),
+                    to: leadToDataType (schedule[key][i].from, bankTimeZone)
+                });
+            }
+            freeSchedule[key].push({
+                from: leadToDataType (schedule[key][length - 1].to, bankTimeZone),
+                to: END_OF_WEEK
             });
         }
-        freeSchedule[key].push({
-            from: leadToDataType (schedule[key][length - 1].to, bankTimeZone),
-            to: END_OF_WEEK
-        });
     });
 
     return freeSchedule;
