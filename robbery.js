@@ -42,7 +42,7 @@ function minDate() {
     return dates[0];
 }
 
-function toFreeSchedule(schedule, bankTimeZone) {
+function findFreeGangsterTime(schedule, bankTimeZone) {
     var freeSchedule = {};
     var keys = Object.keys(schedule);
     keys.forEach(function (key) {
@@ -104,7 +104,7 @@ function formateFreeTime(freeTime) {
     return res;
 }
 
-function dateToObject(date) {
+function leadDateToObject(date) {
     return {
         hours: parseInt(date.slice(0, 2), 10),
         minutes: parseInt(date.slice(3, 5), 10)
@@ -112,8 +112,8 @@ function dateToObject(date) {
 }
 
 function getFreeIntervals(freeTime, workingHours, res) {
-    var startBankWork = dateToObject(workingHours.from);
-    var endBankWork = dateToObject(workingHours.to);
+    var startBankWork = leadDateToObject(workingHours.from);
+    var endBankWork = leadDateToObject(workingHours.to);
     var bank = {};
     freeTime.forEach(function (interval) {
         var day = interval.from.getDate();
@@ -132,11 +132,10 @@ function getFreeIntervals(freeTime, workingHours, res) {
     return res;
 }
 
-function mainFunction(timeToRobbery, msInDuration) {
+function getTimeForRobbery(timeToRobbery, msInDuration) {
     var res = [];
     for (var i = 0; i < timeToRobbery.length; i++) {
-        var a = (timeToRobbery[i].to - timeToRobbery[i].from);
-        if (a >= msInDuration) {
+        if (timeToRobbery[i].to - timeToRobbery[i].from >= msInDuration) {
             res.push(timeToRobbery[i]);
         }
     }
@@ -144,7 +143,7 @@ function mainFunction(timeToRobbery, msInDuration) {
         return null;
     }
 
-    return res; // время для ограбления
+    return res;
 }
 
 function toString(number) {
@@ -177,13 +176,12 @@ function formateDate(date) {
  */
 
 exports.getAppropriateMoment = function (schedule, duration, workingHours) {
-    var newSchedule = {};
     var gmt = parseInt(workingHours.from.slice(5), 10);
     var msInDuration = msInMinute * duration;
-    var freeSchedule = toFreeSchedule (schedule, gmt);
+    var freeSchedule = findFreeGangsterTime (schedule, gmt);
     var freeTime = getGangFreeTime (freeSchedule);
     var timeForRobbery = getFreeIntervals (freeTime, workingHours, []);
-    timeForRobbery = mainFunction (timeForRobbery, msInDuration);
+    timeForRobbery = getTimeForRobbery (timeForRobbery, msInDuration);
 
     return {
 
